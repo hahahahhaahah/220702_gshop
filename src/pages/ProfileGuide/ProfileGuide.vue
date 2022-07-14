@@ -3,17 +3,19 @@
         <HeaderTop title = "我的"> </HeaderTop>
         <section class="profile-number">
           <!-- 通过路由，跳转到登陆界面 -->
-          <router-link to="/login"  class="profile-link">
+          <router-link :to="userInfo._id ? '/userinfo' : '/login'"  class="profile-link">
             <div class="profile_image">
               <i class="iconfont icon-person"></i>
             </div>
             <div class="user-info">
-              <p class="user-info-top">登录/注册</p>
+              <!-- <p class="user-info-top">登录/注册</p> -->
+              <!-- 当用手机号登录的时候，不显示登陆注册也没有用户名 -->
+              <p class="user-info-top" v-if="!userInfo.phone">{{userInfo.name || '登录/注册'}}</p>
               <p>
                 <span class="user-icon">
                   <i class="iconfont icon-shouji icon-mobile"></i>
                 </span>
-                <span class="icon-mobile-number">暂无绑定手机号</span>
+                <span class="icon-mobile-number">{{userInfo.phone || '暂无绑定手机号'}}</span>
               </p>
             </div>
             <span class="arrow">
@@ -89,16 +91,45 @@
             </div>
           </a>
         </section>
+        <section class="profile_my_order border-1px">
+          <!-- 退出登录 -->
+          <mt-button type="danger" 
+                    style="width:100%"
+                    v-if="userInfo._id" @click="logOut">  退出登录 </mt-button>
+        </section>
     </section>
 </template>
 
 <script>
+// 读取userInfo
+import {mapState} from 'vuex'
+import {MessageBox, Toast} from 'mint-ui'
+
 import HeaderTop from '../../components/HeaderTop/HeaderTop.vue'
-
-
 export default {
   components: {
     HeaderTop
+  },
+  computed: {
+    ...mapState(['userInfo'])
+  },
+  methods: {
+    logOut() {
+      MessageBox.confirm('确认退出登录吗?').then(
+        action => {//点击确定,调用
+          if(action === 'confirm') {
+              // 请求退出,请求一个异步action
+              this.$store.dispatch('logOut');
+              // 文本提示框
+              Toast('登出成功');
+          } else{
+            // 取消
+              console.log('取消退出');
+          }
+          
+        }
+        );
+    }
   }
 }
 </script>
@@ -106,19 +137,18 @@ export default {
 <style lang="stylus" rel="stylesheet/stylus">
   @import "../../common/stylus/mixins.styl"
   .profile //我的
-    width 396px
+    // width 396px
+    width 100%
     overflow hidden 
-    margin-left -8px  
+    // margin-left -8px
     .profile-number
-      width 396px
-      margin-top 38.5px
+      margin-top 45.5px
       .profile-link
         clearFix()
         position relative
         left 0
         display block
         background #02a774
-        height 90px
         padding 20px 10px
         .profile_image
           float left
@@ -132,11 +162,12 @@ export default {
             font-size 62px
         .user-info
           float left
-          margin-top -20px
+          margin-top -1px
           margin-left 15px
           p
             font-weight: 700
             font-size 18px
+            margin 5px 0 5px 0
             color #fff
             .user-info-top
               padding-bottom 8px
@@ -150,7 +181,7 @@ export default {
                 font-size 30px
                 vertical-align text-top
             .icon-mobile-number
-              font-size 18px
+              font-size 14px
               color #fff
         .arrow
           width 12px
